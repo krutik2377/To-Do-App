@@ -1,13 +1,11 @@
-//write basic express boilerlater ConvolverNode,
-// with express.json().middleware
-
 const express = require("express");
 const { createTodo, updateTodo } = require("./type")
+const { todo } = require("./db");
 const app  = express();
 
 app.use(express.json());
 
-app.post("", function(req,res) {
+app.post("",async function(req,res) {
     const createPayload = req.body;
     const parsedPayload = createTodo.safeParse(createPayload);
     if(!parsedPayload.success) {
@@ -16,20 +14,43 @@ app.post("", function(req,res) {
         })
         return;
     }
+
+    //put it in mongodb
+    await todo.create({
+        title : createPayload.title,
+        description: createPayload.description,
+        completed: false,
+    })
+
+    res.json({
+        msg : "Todo Created"
+    })
 })
 
 
-app.get("", function(req,res) {
-    
+app.get("",async function(req,res) {
+    const todos = await todo.find({});
+    console.log(todos); //promises
 })
 
-app.put("", function(req,res) {
+app.put("",async function(req,res) {
     const updatePayload = req.body;
     const parsedPayload = updateTodo.safeParse(updatePayload);
     if(!parsedPayload.success) {
         res.status(411).json({
-            msg : "You sent the Wrong inputs";
+            msg : "You sent the Wrong inputs",
         })
         return;
     }
+
+    await todo.update({
+        _id: req.body.id
+    }, {
+        completed: true
+    })
+
+    res.json({
+        msg:"Todo marked as completed"
+    })
+
 })
